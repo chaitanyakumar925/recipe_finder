@@ -1,3 +1,4 @@
+import RecipeCard from"./RecipeCard";
 import React, { useState } from "react";
 
 type Recipe = {
