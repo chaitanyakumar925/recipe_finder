@@ -1,151 +1,87 @@
-import RecipeCard from"./RecipeCard";
 import React, { useState } from "react";
+import RecipeCard from "./components/RecipeCard";
 
-type Recipe = {
-  title: string;
-  time: number;
-  mood: string;
-  ingredients: string[];
-};
-
-const allRecipes: Recipe[] = [
-  {
-    title: "Chicken Curry",
-    time: 50,
-    mood: "comfort",
-    ingredients: ["chicken", "onion", "spices"],
-  },
-  {
-    title: "Pasta Alfredo",
-    time: 25,
-    mood: "happy",
-    ingredients: ["pasta", "cream", "cheese"],
-  },
-  {
-    title: "Veg Salad",
-    time: 15,
-    mood: "light",
-    ingredients: ["lettuce", "tomato", "cucumber"],
-  },
-  {
-    title: "Chocolate Cake",
-    time: 70,
-    mood: "celebration",
-    ingredients: ["flour", "cocoa", "sugar"],
-  },
-];
+interface Meal {
+  idMeal: string;
+  strMeal: string;
+  strMealThumb: string;
+}
 
 function App() {
-  const [ingredients, setIngredients] = useState("");
-  const [mood, setMood] = useState("");
-  const [time, setTime] = useState<number | "">("");
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [ingredient, setIngredient] = useState<string>("");
+  const [mood, setMood] = useState<string>("");
+  const [time, setTime] = useState<string>("");
+  const [recipes, setRecipes] = useState<Meal[]>([]);
 
   const fetchRecipes = async () => {
+    if (!ingredient) return;
+
     try {
-      setLoading(true);
-      setError("");
+      const res = await fetch(
+        `https://www.themealdb.com/api/json/v1/1/filter.php?i=${ingredient}`
+      );
+      const data = await res.json();
 
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      const inputIngredients = ingredients
-        .toLowerCase()
-        .split(",")
-        .map((i) => i.trim())
-        .filter((i) => i.length > 0);
-
-      const filtered = allRecipes.filter((recipe) => {
-        const hasIngredient =
-          inputIngredients.length === 0 ||
-          inputIngredients.some((ing) =>
-            recipe.ingredients.includes(ing.toLowerCase())
-          );
-
-        const matchesMood = !mood || recipe.mood === mood;
-        const matchesTime = !time || recipe.time <= Number(time);
-
-        return hasIngredient && matchesMood && matchesTime;
-      });
-
-      setRecipes(filtered);
-    } catch (err) {
-      setError("Failed to fetch recipes.");
-    } finally {
-      setLoading(false);
+      if (data.meals) {
+        setRecipes(data.meals);
+      } else {
+        setRecipes([]);
+      }
+    } catch (error) {
+      console.error("Error fetching recipes:", error);
+      setRecipes([]);
     }
   };
 
   return (
-    <div style={{ padding: "20px", fontFamily: "Arial" }}>
-      <h1>🍽 Recipe Finder</h1>
+    <div className="min-h-screen bg-gray-100 p-6">
+      <h1 className="text-2xl font-bold text-center mb-6">🍽 Recipe Finder</h1>
 
-      {/* Ingredients input */}
-      <div style={{ marginBottom: "10px" }}>
+      {/* Input Section */}
+      <div className="max-w-xl mx-auto bg-white shadow-lg rounded-xl p-6 space-y-4">
         <input
           type="text"
-          placeholder="Enter ingredients (comma separated)"
-          value={ingredients}
-          onChange={(e) => setIngredients(e.target.value)}
-          style={{ padding: "8px", width: "300px" }}
+          value={ingredient}
+          onChange={(e) => setIngredient(e.target.value)}
+          placeholder="Enter an ingredient (e.g., chicken)"
+          className="w-full border p-3 rounded-lg"
         />
-      </div>
 
-      {/* Mood selector */}
-      <div style={{ marginBottom: "10px" }}>
-        <select value={mood} onChange={(e) => setMood(e.target.value)}>
-          <option value="">Select Mood</option>
-          <option value="happy">Happy</option>
-          <option value="comfort">Comfort</option>
-          <option value="light">Light</option>
-          <option value="celebration">Celebration</option>
-        </select>
-      </div>
+        <input
+          type="text"
+          value={mood}
+          onChange={(e) => setMood(e.target.value)}
+          placeholder="What's your mood? (just for display)"
+          className="w-full border p-3 rounded-lg"
+        />
 
-      {/* Time input */}
-      <div style={{ marginBottom: "10px" }}>
         <input
           type="number"
-          placeholder="Max cooking time (minutes)"
           value={time}
-          onChange={(e) =>
-            setTime(e.target.value ? Number(e.target.value) : "")
-          }
-          style={{ padding: "8px", width: "200px" }}
+          onChange={(e) => setTime(e.target.value)}
+          placeholder="How much time do you have? (minutes)"
+          className="w-full border p-3 rounded-lg"
         />
+
+        <button
+          onClick={fetchRecipes}
+          className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition"
+        >
+          Search Recipes
+        </button>
       </div>
 
-      {/* Search button */}
-      <button onClick={fetchRecipes} style={{ padding: "10px 20px" }}>
-        Find Recipes
-      </button>
-
-      {/* Loading & Error messages */}
-      {loading && <p>Loading recipes...</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      {/* Results */}
-      <div style={{ marginTop: "20px" }}>
-        {recipes.length > 0
-          ? recipes.map((recipe, idx) => (
-              <div
-                key={idx}
-                style={{
-                  border: "1px solid #ccc",
-                  padding: "10px",
-                  marginBottom: "10px",
-                  borderRadius: "8px",
-                }}
-              >
-                <h3>{recipe.title}</h3>
-                <p>Time: {recipe.time} min</p>
-                <p>Mood: {recipe.mood}</p>
-                <p>Ingredients: {recipe.ingredients.join(", ")}</p>
-              </div>
-            ))
-          : !loading && <p>No recipes found. Try different inputs!</p>}
+      {/* Recipes List */}
+      <div className="max-w-3xl mx-auto mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        {recipes.length > 0 ? (
+          recipes.map((meal) => (
+            <RecipeCard key={meal.idMeal} meal={meal} mood={mood} time={time} />
+          ))
+        ) : (
+          <p className="text-center text-gray-500 col-span-full">
+            No recipes found. Try another ingredient.
+          </p>
+        )}
       </div>
     </div>
   );
