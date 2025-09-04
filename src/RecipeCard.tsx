@@ -1,23 +1,32 @@
 import React from "react";
 
 interface RecipeCardProps {
-  title: string;
-  description: string;
-  onOpen?: () => void;
+  meal: {
+    idMeal: string;
+    strMeal: string;
+    strMealThumb: string;
+  };
+  mood: string;
+  time: string;
 }
 
-const RecipeCard: React.FC<RecipeCardProps> = ({
-  title,
-  description,
-  onOpen,
-}) => {
+const RecipeCard: React.FC<RecipeCardProps> = ({ meal, mood, time }) => {
   return (
-    <div
-      className="bg-white rounded-lg shadow-md p-4 cursor-pointer hover:shadow-lg transition"
-      onClick={onOpen}
-    >
-      <h2 className="text-xl font-bold text-indigo-600 mb-2">{title}</h2>
-      <p className="text-gray-700">{description}</p>
+    <div className="bg-white shadow-md rounded-xl overflow-hidden">
+      <img
+        src={meal.strMealThumb}
+        alt={meal.strMeal}
+        className="w-full h-40 object-cover"
+      />
+      <div className="p-4">
+        <h2 className="font-semibold text-lg">{meal.strMeal}</h2>
+        <p className="text-sm text-gray-600">
+          <strong>Mood:</strong> {mood || "Not specified"}
+        </p>
+        <p className="text-sm text-gray-600">
+          <strong>Time:</strong> {time ? `${time} minutes` : "Not specified"}
+        </p>
+      </div>
     </div>
   );
 };
